@@ -1,0 +1,16 @@
+export const USER_ROLES = {
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  ADMIN: 'ADMIN',
+  INVENTORY_ADMIN: 'INVENTORY_ADMIN',
+  CUSTOMER: 'CUSTOMER',
+  GUEST: 'GUEST',
+} as const;
+
+export type UserRole = (typeof USER_ROLES)[keyof typeof USER_ROLES];
+
+export const ADMIN_ROLES: UserRole[] = [USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN];
+export const STAFF_ROLES: UserRole[] = [
+  USER_ROLES.SUPER_ADMIN,
+  USER_ROLES.ADMIN,
+  USER_ROLES.INVENTORY_ADMIN,
+];

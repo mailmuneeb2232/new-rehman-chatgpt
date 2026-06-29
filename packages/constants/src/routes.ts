@@ -1,0 +1,26 @@
+export const ROUTES = {
+  HOME: '/',
+  PRODUCTS: '/products',
+  PRODUCT: (slug: string) => `/products/${slug}`,
+  CATEGORY: (slug: string) => `/categories/${slug}`,
+  CART: '/cart',
+  CHECKOUT: '/checkout',
+  CHECKOUT_SUCCESS: '/checkout/success',
+  SEARCH: '/search',
+  ABOUT: '/about',
+  CONTACT: '/contact',
+  AUTH: {
+    LOGIN: '/login',
+    REGISTER: '/register',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
+  },
+  CUSTOMER: {
+    ACCOUNT: '/account',
+    ORDERS: '/orders',
+    ORDER: (id: string) => `/orders/${id}`,
+    WISHLIST: '/wishlist',
+    ADDRESSES: '/addresses',
+    PROFILE: '/profile',
+  },
+} as const;
