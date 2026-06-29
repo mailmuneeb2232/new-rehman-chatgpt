@@ -1,16 +1,11 @@
-import type { MetadataRoute } from 'next';
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env['NEXT_PUBLIC_APP_URL'] ?? 'https://electronicstore.com';
-
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://electrostore.com';
   return {
     rules: [
-      {
-        userAgent: '*',
-        allow: '/',
-        disallow: ['/api/', '/(customer)/', '/(auth)/'],
-      },
+      { userAgent: '*', allow: '/', disallow: ['/account/', '/checkout/', '/admin/', '/api/'] },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${BASE_URL}/sitemap.xml`,
   };
 }

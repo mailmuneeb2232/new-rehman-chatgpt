@@ -1,26 +1,16 @@
 import Link from 'next/link';
-import type { Metadata } from 'next';
+import { Button } from '@/components/ui/button';
 
-export const metadata: Metadata = {
-  title: '404 — Page Not Found',
-};
-
-export default function NotFoundPage() {
+export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4">
-      <div className="text-center">
-        <p className="text-sm font-medium uppercase tracking-widest text-muted-foreground">404</p>
-        <h1 className="mt-2 text-4xl font-bold text-foreground">Page not found</h1>
-        <p className="mt-2 text-muted-foreground">
-          The page you are looking for does not exist or has been moved.
-        </p>
+    <div className="flex flex-col items-center justify-center min-h-screen text-center px-4">
+      <h1 className="text-9xl font-black text-zinc-200 dark:text-zinc-800">404</h1>
+      <h2 className="text-2xl font-black text-zinc-900 dark:text-white mt-4 mb-2">Page Not Found</h2>
+      <p className="text-zinc-500 mb-8 max-w-sm">Sorry, the page you're looking for doesn't exist or has been moved.</p>
+      <div className="flex gap-4">
+        <Button asChild><Link href="/">Go Home</Link></Button>
+        <Button asChild variant="outline"><Link href="/shop">Browse Products</Link></Button>
       </div>
-      <Link
-        href="/"
-        className="rounded-lg bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
-      >
-        Back to home
-      </Link>
     </div>
   );
 }
