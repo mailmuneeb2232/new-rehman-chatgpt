@@ -1,72 +1,94 @@
-import { Controller, Get, Patch, Delete, Body, Param, Query, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller, Get, Patch, Post, Body, Param, Query,
+  ParseIntPipe, DefaultValuePipe, ParseUUIDPipe,
+} from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 
-@ApiTags('users')
-@Controller({ path: 'users', version: '1' })
-@UseGuards(JwtAuthGuard, RolesGuard)
+@ApiTags('Users')
 @ApiBearerAuth()
+@Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('me')
-  @ApiOperation({ summary: 'Get own profile' })
-  getMe(@CurrentUser('id') userId: string) {
-    return this.usersService.findById(userId);
+  getProfile(@CurrentUser('id') userId: string) {
+    return this.usersService.getProfile(userId);
   }
 
   @Patch('me')
-  @ApiOperation({ summary: 'Update own profile' })
   updateProfile(@CurrentUser('id') userId: string, @Body() dto: UpdateProfileDto) {
     return this.usersService.updateProfile(userId, dto);
   }
 
-  @Delete('me')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Deactivate own account' })
-  deactivate(@CurrentUser('id') userId: string) {
-    return this.usersService.deactivateAccount(userId);
+  @Post('me/change-password')
+  changePassword(@CurrentUser('id') userId: string, @Body() dto: ChangePasswordDto) {
+    return this.usersService.changePassword(userId, dto);
+  }
+
+  @Get('me/orders')
+  getOrderHistory(
+    @CurrentUser('id') userId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.usersService.getOrderHistory(userId, page, limit);
+  }
+
+  @Get('me/notifications')
+  getNotifications(
+    @CurrentUser('id') userId: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+  ) {
+    return this.usersService.getNotifications(userId, page, limit);
+  }
+
+  @Post('me/notifications/:id/read')
+  markRead(
+    @CurrentUser('id') userId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.usersService.markNotificationRead(userId, id);
+  }
+
+  @Post('me/notifications/read-all')
+  markAllRead(@CurrentUser('id') userId: string) {
+    return this.usersService.markAllNotificationsRead(userId);
   }
 
   // Admin endpoints
-  @Get()
-  @Roles('ADMIN', 'SUPER_ADMIN')
-  @ApiOperation({ summary: '[ADMIN] List all users' })
-  findAll(
-    @Query() pagination: PaginationDto,
-    @Query('search') search?: string,
+  @Get('admin')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  getAllUsers(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('search') search: string,
   ) {
-    return this.usersService.findAll(pagination.page, pagination.limit, search);
+    return this.usersService.getAllUsers(page, limit, search);
   }
 
-  @Get('stats')
-  @Roles('ADMIN', 'SUPER_ADMIN')
-  @ApiOperation({ summary: '[ADMIN] User statistics' })
-  getStats() {
-    return this.usersService.getStats();
-  }
-
-  @Get(':id')
-  @Roles('ADMIN', 'SUPER_ADMIN')
-  @ApiOperation({ summary: '[ADMIN] Get user by ID' })
-  findOne(@Param('id') id: string) {
-    return this.usersService.findById(id);
-  }
-
-  @Patch(':id/role')
-  @Roles('SUPER_ADMIN')
-  @ApiOperation({ summary: '[SUPER_ADMIN] Update user role' })
+  @Patch('admin/:id/role')
+  @Roles(UserRole.SUPER_ADMIN)
   updateRole(
-    @Param('id') id: string,
-    @Body('role') role: 'ADMIN' | 'INVENTORY_ADMIN' | 'CUSTOMER',
-    @CurrentUser('id') requesterId: string,
+    @CurrentUser('id') adminId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('role') role: string,
   ) {
-    return this.usersService.updateRole(id, role, requesterId);
+    return this.usersService.updateUserRole(adminId, id, role);
+  }
+
+  @Post('admin/:id/ban')
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  toggleBan(
+    @CurrentUser('id') adminId: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.usersService.toggleUserBan(adminId, id);
   }
 }
