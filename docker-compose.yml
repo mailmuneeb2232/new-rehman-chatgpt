@@ -1,0 +1,98 @@
+# Electronic Store — Development Stack
+# Runs the complete development environment with a single command: make dev-docker
+# All services are configured for local development only.
+
+version: '3.9'
+
+services:
+  # ───────────────────────────────────────────────────────────────────────────
+  # PostgreSQL 16 — Primary Database
+  # ───────────────────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: electronic-store-postgres
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: electronic_store
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d electronic_store']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - electronic-store-network
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Redis 7 — Cache + Session Store + Job Queues
+  # ───────────────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: electronic-store-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: >
+      redis-server
+      --requirepass ""
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - electronic-store-network
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # MailHog — Local Email Testing
+  # UI: http://localhost:8025
+  # ───────────────────────────────────────────────────────────────────────────
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: electronic-store-mailhog
+    restart: unless-stopped
+    ports:
+      - '1025:1025'  # SMTP
+      - '8025:8025'  # Web UI
+    networks:
+      - electronic-store-network
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Redis Commander — Redis GUI
+  # UI: http://localhost:8081
+  # ───────────────────────────────────────────────────────────────────────────
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: electronic-store-redis-ui
+    restart: unless-stopped
+    ports:
+      - '8081:8081'
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - electronic-store-network
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  electronic-store-network:
+    driver: bridge

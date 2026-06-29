@@ -1,0 +1,57 @@
+# Development overrides — hot reload, volume mounts, debug ports
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api/Dockerfile.dev
+    container_name: electronic-store-api-dev
+    restart: unless-stopped
+    ports:
+      - '3001:3001'
+      - '9229:9229'  # Node.js inspector
+    environment:
+      NODE_ENV: development
+    env_file:
+      - .env
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages:/app/packages
+      - /app/apps/api/node_modules
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - electronic-store-network
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web/Dockerfile.dev
+    container_name: electronic-store-web-dev
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+    env_file:
+      - .env
+    volumes:
+      - ./apps/web:/app/apps/web
+      - ./packages:/app/packages
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    depends_on:
+      - api
+    networks:
+      - electronic-store-network
+
+networks:
+  electronic-store-network:
+    external: true

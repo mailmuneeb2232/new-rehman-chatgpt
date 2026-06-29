@@ -1,0 +1,23 @@
+packages:
+  - 'apps/*'
+  - 'apps/future/*'
+  - 'packages/*'
+
+# Catalog versions ensure consistent dependencies across all workspaces.
+# Update a package version here once, applied everywhere.
+catalog:
+  # React ecosystem
+  react: ^19.0.0
+  react-dom: ^19.0.0
+  next: ^15.0.0
+
+  # TypeScript
+  typescript: ^5.0.0
+
+  # Testing
+  vitest: ^2.0.0
+  '@playwright/test': ^1.45.0
+
+  # Tooling
+  eslint: ^9.0.0
+  prettier: ^3.0.0
