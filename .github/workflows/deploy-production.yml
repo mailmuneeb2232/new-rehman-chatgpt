@@ -1,0 +1,37 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    name: Deploy Production
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push Docker images
+        run: echo "Build and push production images"
+
+      - name: Run database migrations
+        run: echo "Run pending migrations"
+
+      - name: Deploy to production (blue-green)
+        run: echo "Blue-green deploy to production"
+
+      - name: Run smoke tests
+        run: echo "Run smoke tests against production"
+
+      - name: Notify on success
+        if: success()
+        run: echo "Notify team of successful production deploy"
+
+      - name: Rollback on failure
+        if: failure()
+        run: echo "Rollback to previous version"

@@ -1,0 +1,30 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy-staging:
+    name: Deploy Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push Docker images
+        run: echo "Build and push to registry"
+
+      - name: Deploy to staging
+        run: echo "Deploy to staging environment"
+
+      - name: Run smoke tests
+        run: echo "Run smoke tests against staging"
+
+      - name: Notify on failure
+        if: failure()
+        run: echo "Notify team of staging deploy failure"
